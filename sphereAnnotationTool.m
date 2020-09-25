@@ -37,6 +37,7 @@ classdef sphereAnnotationTool < handle
     
     methods
         function tool = sphereAnnotationTool(V,maxRadius,nClasses,varargin)
+            % see annotateSpheres.m for a demo
             tool.ShowingFirstChannel = true;
             if nargin > 3
                 tool.SecondChannel = varargin{1};

@@ -28,6 +28,9 @@ classdef stackViewTool < handle
 % load mri
 % V = double(squeeze(D))/255;
 % stackViewTool(V)
+% 
+% optional arguments allow a per-plane plot alongside the stack view:
+% stackViewTool(V,squeeze(sum(sum(V,1),2)),'sum of pixel intensities');
 
             tool.Volume = V;
             tool.NPlanes = size(V,3);

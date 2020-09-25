@@ -24,26 +24,18 @@ classdef volumeAnnotationTool < handle
         UpperThresholdSlider
         Slider
         SliderZ
-        DidAnnotate
+        SecondChannel
+        ShowingFirstChannel
     end
     
     methods
-        function tool = volumeAnnotationTool(V,nLabels)
-% volumeAnnotationTool(V,nClasses)
-% A tool to annotate a 3D volume for machine learning
-% V should be 'double' and in the range [0,1]
-% nClasses is the number of classes (1,2,3,...)
-%
-% example
-% -------
-% load mri
-% V = double(squeeze(D))/255;
-% VAT = volumeAnnotationTool(V,2);
-% % [annotate, click 'Done']
-% MaskClass1 = VAT.LabelMasks(:,:,:,1);
-% MaskClass2 = VAT.LabelMasks(:,:,:,2);
-            
-            tool.DidAnnotate = 0;
+        function tool = volumeAnnotationTool(V,nLabels,varargin)
+            % see annotate3D.m for a demo
+            tool.ShowingFirstChannel = true;
+            if nargin > 2
+                tool.SecondChannel = varargin{1};
+            end
+
             
             tool.Volume = V;
             tool.NPlanes = size(V,3);
@@ -126,6 +118,22 @@ classdef volumeAnnotationTool < handle
         end
         
         function keyPressed(tool,~,event)
+            if strcmp(event.Key,'space')
+                if ~isempty(tool.SecondChannel)
+                    if tool.ShowingFirstChannel
+                        I = tool.SecondChannel(:,:,tool.PlaneIndex);
+                        tool.PlaneHandle.CData = tool.applyThresholds(I);
+                        
+                        tool.ShowingFirstChannel = false;
+                    else
+                        I = tool.Volume(:,:,tool.PlaneIndex);
+                        tool.PlaneHandle.CData = tool.applyThresholds(I);
+                        
+                        tool.ShowingFirstChannel = true;
+                    end
+                end
+            end
+            
             addToZ = 0;
             if strcmp(event.Key,'add') || strcmp(event.Key,'equal') || strcmp(event.Key,'rightarrow') || strcmp(event.Key,'uparrow')
                 addToZ = 1;
@@ -243,13 +251,24 @@ classdef volumeAnnotationTool < handle
                     tool.LowerThreshold = value;
                 end
                 
-                I = tool.Volume(:,:,tool.PlaneIndex);
-                tool.PlaneHandle.CData = tool.applyThresholds(I);
+                if isempty(tool.SecondChannel) || tool.ShowingFirstChannel
+                    I = tool.Volume(:,:,tool.PlaneIndex);
+                    tool.PlaneHandle.CData = tool.applyThresholds(I);
+                else
+                    I = tool.SecondChannel(:,:,tool.PlaneIndex);
+                    tool.PlaneHandle.CData = tool.applyThresholds(I);
+                end
             elseif strcmp(tag,'zs')
                 tool.PlaneIndex = round(value);
 
-                I = tool.Volume(:,:,tool.PlaneIndex);
-                tool.PlaneHandle.CData = tool.applyThresholds(I);
+                if isempty(tool.SecondChannel) || tool.ShowingFirstChannel
+                    I = tool.Volume(:,:,tool.PlaneIndex);
+                    tool.PlaneHandle.CData = tool.applyThresholds(I);
+                else
+                    I = tool.SecondChannel(:,:,tool.PlaneIndex);
+                    tool.PlaneHandle.CData = tool.applyThresholds(I);
+                end
+                
                 tool.TransparencyHandle.AlphaData = 0.5*tool.LabelMasks(:,:,tool.PlaneIndex,tool.LabelIndex);
 
                 tool.Axis.Title.String = sprintf('z = %d', tool.PlaneIndex);
@@ -292,7 +311,6 @@ classdef volumeAnnotationTool < handle
         function buttonDonePushed(tool,~,~)
             NoOverlap = sum(tool.LabelMasks,4) <= 1;
             tool.LabelMasks = tool.LabelMasks.*repmat(NoOverlap,[1 1 1 tool.NLabels]);
-            tool.DidAnnotate = 1;
             tool.closeTool();
         end
     end

@@ -14,9 +14,6 @@ classdef imageAnnotationTool < handle
         Dialog
         RadioDraw
         RadioErase
-%         FolderPath
-%         ImageName
-        DidAnnotate
         Slider
         SliderMin
         SliderMax
@@ -26,12 +23,19 @@ classdef imageAnnotationTool < handle
         UpperThresholdBox
         LowerThresholdSlider
         UpperThresholdSlider
+        SecondChannel
+        ShowingFirstChannel
     end
     
     methods
         
-        function tool = imageAnnotationTool(I,nLabels)
-            tool.DidAnnotate = 0;
+        function tool = imageAnnotationTool(I,nLabels,varargin)
+            % see annotate2D.m for a demo
+            tool.ShowingFirstChannel = true;
+            if nargin > 2
+                tool.SecondChannel = varargin{1};
+            end
+            
             tool.LabelIndex = 1;
             tool.Image = I;
             J = ones(size(tool.Image));
@@ -45,6 +49,7 @@ classdef imageAnnotationTool < handle
                                  'WindowButtonMotionFcn', @tool.mouseMove, ...
                                  'WindowButtonDownFcn', @tool.mouseDown, ...
                                  'WindowButtonUpFcn', @tool.mouseUp, ...
+                                 'KeyPressFcn',@tool.keyPressed, ...
                                  'Resize','on');
             tool.Axis = axes('Parent',tool.Figure,'Position',[0 0 1 1]);
             
@@ -65,6 +70,7 @@ classdef imageAnnotationTool < handle
             tool.Dialog = dialog('WindowStyle', 'normal',...
                                 'Name', 'ImageAnnotationTool',...
                                 'CloseRequestFcn', @tool.closeDialog,...
+                                'KeyPressFcn',@tool.keyPressed,...
                                 'Position',[100 100 dwidth 11*dborder+11*cheight]);
             labels = cell(1,nLabels);
             for i = 1:nLabels
@@ -77,13 +83,13 @@ classdef imageAnnotationTool < handle
             tool.LowerThreshold = 0;
             tool.LowerThresholdSlider = uicontrol('Parent',tool.Dialog,'Style','slider','Min',0,'Max',1,'Value',tool.LowerThreshold,'Position',[dborder 9*dborder+8*cheight cwidth cheight],'Tag','lts');
             addlistener(tool.LowerThresholdSlider,'Value','PostSet',@tool.continuousSliderManage);
-            tool.LowerThresholdBox = uicontrol('Parent',tool.Dialog,'Style','edit','String','0.0000','Position',[dborder 9*dborder+9*cheight 70 cheight],'HorizontalAlignment','left','Tag','ltb','Callback',@tool.changeThreshold);
+            tool.LowerThresholdBox = uicontrol('Parent',tool.Dialog,'Style','edit','String','0.0000','Position',[dborder 9*dborder+9*cheight 70 cheight],'HorizontalAlignment','left','Tag','ltb');
             
             % upper threshold slider
             tool.UpperThreshold = 1;
             tool.UpperThresholdSlider = uicontrol('Parent',tool.Dialog,'Style','slider','Min',0,'Max',1,'Value',tool.UpperThreshold,'Position',[dborder 8*dborder+7*cheight cwidth cheight],'Tag','uts');
             addlistener(tool.UpperThresholdSlider,'Value','PostSet',@tool.continuousSliderManage);
-            tool.UpperThresholdBox = uicontrol('Parent',tool.Dialog,'Style','edit','String','1.0000','Position',[dborder+cwidth-70 8*dborder+6*cheight 70 cheight],'HorizontalAlignment','right','Tag','utb','Callback',@tool.changeThreshold);
+            tool.UpperThresholdBox = uicontrol('Parent',tool.Dialog,'Style','edit','String','1.0000','Position',[dborder+cwidth-70 8*dborder+6*cheight 70 cheight],'HorizontalAlignment','right','Tag','utb');
             
             % erase/draw
             tool.RadioDraw = uicontrol('Parent',tool.Dialog,'Style','radiobutton','Position',[dborder 5*dborder+6*cheight cwidth cheight],'String','Draw','Callback',@tool.radioDraw);
@@ -109,21 +115,30 @@ classdef imageAnnotationTool < handle
             uiwait(tool.Dialog)
         end
         
-        function changeThreshold(tool,src,~)
-            value = str2double(src.String);
-            if strcmp(src.Tag,'ltb')
-                tool.LowerThreshold = value;
-                tool.LowerThresholdSlider.Value = value;
-            elseif strcmp(src.Tag,'utb')
-                tool.UpperThreshold = value;
-                tool.UpperThresholdSlider.Value = value;
+        function keyPressed(tool,~,event)
+            if strcmp(event.Key,'space')
+                if ~isempty(tool.SecondChannel)
+                    if tool.ShowingFirstChannel
+                        I = tool.SecondChannel;
+                        tool.ImageHandle.CData = tool.applyThresholds(I);
+                        
+                        tool.ShowingFirstChannel = false;
+                    else
+                        I = tool.Image;
+                        tool.ImageHandle.CData = tool.applyThresholds(I);
+                        
+                        tool.ShowingFirstChannel = true;
+                    end
+                end
             end
-            I = tool.Image;
-            I(I < tool.LowerThreshold) = tool.LowerThreshold;
-            I(I > tool.UpperThreshold) = tool.UpperThreshold;
-            I = I-min(I(:));
-            I = I/max(I(:));
-            tool.ImageHandle.CData = I;
+        end
+        
+        function T = applyThresholds(tool,I)
+            T = I;
+            T(T < tool.LowerThreshold) = tool.LowerThreshold;
+            T(T > tool.UpperThreshold) = tool.UpperThreshold;
+            T = T-min(T(:));
+            T = T/max(T(:));
         end
         
         function changeSliderRange(tool,src,~)
@@ -177,12 +192,14 @@ classdef imageAnnotationTool < handle
                     tool.LowerThreshold = value;
                     tool.LowerThresholdBox.String = sprintf('%.04f', value);
                 end
-                I = tool.Image;
-                I(I < tool.LowerThreshold) = tool.LowerThreshold;
-                I(I > tool.UpperThreshold) = tool.UpperThreshold;
-                I = I-min(I(:));
-                I = I/max(I(:));
-                tool.ImageHandle.CData = I;
+                
+                if isempty(tool.SecondChannel) || tool.ShowingFirstChannel
+                    I = tool.Image;
+                    tool.ImageHandle.CData = tool.applyThresholds(I);
+                else
+                    I = tool.SecondChannel;
+                    tool.ImageHandle.CData = tool.applyThresholds(I);
+                end
             end
         end
         
@@ -203,11 +220,7 @@ classdef imageAnnotationTool < handle
         
         function buttonDonePushed(tool,~,~)
             NoOverlap = sum(tool.LabelMasks,3) <= 1;
-%             for i = 1:tool.NLabels
-%                 imwrite(tool.LabelMasks(:,:,i).*NoOverlap,[tool.FolderPath sprintf('/%s_Class%d.png',tool.ImageName,i)]);
-%             end
             tool.LabelMasks = tool.LabelMasks.*repmat(NoOverlap,[1 1 tool.NLabels]);
-            tool.DidAnnotate = 1;
             delete(tool.Dialog);
             delete(tool.Figure);
         end

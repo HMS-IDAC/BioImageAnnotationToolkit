@@ -1,6 +1,8 @@
 # BioImageAnnotationToolkit
 Bio-Image Annotation Toolkit
 
-Dependencies:
+##Dependencies:
+
 Image Processing Toolbox
+
 Statistics and Machine Learning Toolbox
