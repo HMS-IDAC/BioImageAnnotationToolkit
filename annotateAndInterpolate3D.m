@@ -5,7 +5,7 @@ V = double(squeeze(D))/255;
 
 W = V;
 AccM = false(size(W));
-tlvt(W)
+stackViewTool(W);
 
 %% [optional save] save data to continue annotations later
 
@@ -56,7 +56,7 @@ AccM = AccM | M;
 
 W = V;
 W(AccM) = 0.75*W(AccM);
-tlvt(W)
+stackViewTool(W);
 
 %% 4. save final annotations
 % make sure the output file name is related to -- but not the same as -- the input file name
@@ -64,7 +64,9 @@ tlvt(W)
 antPath = 'ant.tif';
 
 Ant = 255*uint8(AccM);
+disp('saving...')
 imwrite(Ant(:,:,1), antPath, 'WriteMode', 'append', 'Compression','none');
 for i = 2:size(V,3)
     imwrite(Ant(:,:,i), antPath, 'WriteMode', 'append', 'Compression','none');
 end
+disp('done saving')

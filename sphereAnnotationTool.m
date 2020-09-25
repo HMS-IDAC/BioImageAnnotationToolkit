@@ -75,15 +75,15 @@ classdef sphereAnnotationTool < handle
             tool.YMarkers{1} = plot(tool.Center(1)+[-5 5],(tool.Center(2)-tool.Radius)*[1 1],'b');
             tool.YMarkers{2} = plot(tool.Center(1)+[-5 5],(tool.Center(2)+tool.Radius)*[1 1],'b');
             
-            dwidth = 1000;%300;
+            dwidth = 500;
             dborder = 10;
             cwidth = dwidth-2*dborder;
             cheight = 20;
             
             tool.Dialog = dialog('WindowStyle', 'normal', 'Resize', 'on',...
-                                'Name', 'SphereAnnotationToolPro',...
+                                'Name', 'SphereAnnotationTool',...
                                 'CloseRequestFcn', @tool.closeTool,...
-                                'Position',[100 100 dwidth 10.5*dborder+10.5*cheight],...
+                                'Position',[100 100 dwidth 12.5*dborder+11.5*cheight],...
                                 'KeyPressFcn',@tool.keyPressed);
 
             % class popup
@@ -91,44 +91,46 @@ classdef sphereAnnotationTool < handle
             for i = 1:nClasses
                 labels{i} = sprintf('Class %d',i);
             end
-            uicontrol('Parent',tool.Dialog,'Style','popupmenu','String',labels,'Position', [dborder+20 9.5*dborder+9.5*cheight cwidth-20 cheight],'Callback',@tool.popupManage);
+            uicontrol('Parent',tool.Dialog,'Style','popupmenu','String',labels,'Position', [dborder+20 11.5*dborder+10.5*cheight cwidth-20 cheight],'Callback',@tool.popupManage);
             
              % x slider
-            uicontrol('Parent',tool.Dialog,'Style','text','String','x','Position',[dborder 8*dborder+8*cheight 20 cheight]);
-            tool.XSlider = uicontrol('Parent',tool.Dialog,'Style','slider','Min',1,'Max',size(V,2),'Value',tool.Center(1),'Position',[dborder+20 8*dborder+8*cheight cwidth-20 cheight],'Tag','xs');
+            uicontrol('Parent',tool.Dialog,'Style','text','String','x','Position',[dborder 10*dborder+9*cheight 20 cheight]);
+            tool.XSlider = uicontrol('Parent',tool.Dialog,'Style','slider','Min',1,'Max',size(V,2),'Value',tool.Center(1),'Position',[dborder+20 10*dborder+9*cheight cwidth-20 cheight],'Tag','xs');
             addlistener(tool.XSlider,'Value','PostSet',@tool.continuousSliderManage);
             
              % y slider
-            uicontrol('Parent',tool.Dialog,'Style','text','String','y','Position',[dborder 7*dborder+7*cheight 20 cheight]);
-            tool.YSlider = uicontrol('Parent',tool.Dialog,'Style','slider','Min',1,'Max',size(V,1),'Value',tool.Center(2),'Position',[dborder+20 7*dborder+7*cheight cwidth-20 cheight],'Tag','ys');
+            uicontrol('Parent',tool.Dialog,'Style','text','String','y','Position',[dborder 9*dborder+8*cheight 20 cheight]);
+            tool.YSlider = uicontrol('Parent',tool.Dialog,'Style','slider','Min',1,'Max',size(V,1),'Value',tool.Center(2),'Position',[dborder+20 9*dborder+8*cheight cwidth-20 cheight],'Tag','ys');
             addlistener(tool.YSlider,'Value','PostSet',@tool.continuousSliderManage);
             
             % r slider
-            uicontrol('Parent',tool.Dialog,'Style','text','String','r','Position',[dborder 6*dborder+6*cheight 20 cheight]);
-            tool.RSlider = uicontrol('Parent',tool.Dialog,'Style','slider','Min',1,'Max',tool.MaxRadius,'Value',tool.Radius,'Position',[dborder+20 6*dborder+6*cheight cwidth-20 cheight],'Tag','rs');
+            uicontrol('Parent',tool.Dialog,'Style','text','String','r','Position',[dborder 8*dborder+7*cheight 20 cheight]);
+            tool.RSlider = uicontrol('Parent',tool.Dialog,'Style','slider','Min',1,'Max',tool.MaxRadius,'Value',tool.Radius,'Position',[dborder+20 8*dborder+7*cheight cwidth-20 cheight],'Tag','rs');
             addlistener(tool.RSlider,'Value','PostSet',@tool.continuousSliderManage);
             
             % add/remove buttons
-            uicontrol('Parent',tool.Dialog,'Style','pushbutton','String','add','Position',[dborder+20 5*dborder+5*cheight (cwidth-20)/2-10 cheight],'Callback',@tool.buttonPushed);
-            uicontrol('Parent',tool.Dialog,'Style','pushbutton','String','remove','Position',[dborder+20+(cwidth-20)/2+10 5*dborder+5*cheight (cwidth-20)/2-10 cheight],'Callback',@tool.buttonPushed);
+            uicontrol('Parent',tool.Dialog,'Style','pushbutton','String','add','Position',[dborder+20 7*dborder+6*cheight (cwidth-20)/2-10 cheight],'Callback',@tool.buttonPushed);
+            uicontrol('Parent',tool.Dialog,'Style','pushbutton','String','rem','Position',[dborder+20+(cwidth-20)/2+10 7*dborder+6*cheight (cwidth-20)/2-10 cheight],'Callback',@tool.buttonPushed);
                             
             % z slider
-            uicontrol('Parent',tool.Dialog,'Style','text','String','f','Position',[dborder 3*dborder+3*cheight 20 cheight]);
-            tool.PlaneLabel = uicontrol('Parent',tool.Dialog,'Style','text','String',sprintf('%d',tool.PlaneIndex),'Position',[dwidth-dborder-40 3*dborder+2*cheight 40 cheight],'HorizontalAlignment','Right');
-            tool.SliderZ = uicontrol('Parent',tool.Dialog,'Style','slider','Min',1,'Max',tool.NPlanes,'Value',tool.PlaneIndex,'Position',[dborder+20 3*dborder+3*cheight cwidth-20 cheight],'Tag','zs');
+            uicontrol('Parent',tool.Dialog,'Style','text','String','f','Position',[dborder 5*dborder+4*cheight 20 cheight]);
+            tool.PlaneLabel = uicontrol('Parent',tool.Dialog,'Style','text','String',sprintf('%d',tool.PlaneIndex),'Position',[dwidth-dborder-40 5*dborder+3*cheight 40 cheight],'HorizontalAlignment','Right');
+            tool.SliderZ = uicontrol('Parent',tool.Dialog,'Style','slider','Min',1,'Max',tool.NPlanes,'Value',tool.PlaneIndex,'Position',[dborder+20 5*dborder+4*cheight cwidth-20 cheight],'Tag','zs');
             addlistener(tool.SliderZ,'Value','PostSet',@tool.continuousSliderManage);
 
             % lower threshold slider
-            uicontrol('Parent',tool.Dialog,'Style','text','String','_t','Position',[dborder 2*dborder+cheight 20 cheight]);
-            tool.LowerThresholdSlider = uicontrol('Parent',tool.Dialog,'Style','slider','Min',0,'Max',1,'Value',tool.LowerThreshold,'Position',[dborder+20 2*dborder+cheight cwidth-20 cheight],'Tag','lts');
+            uicontrol('Parent',tool.Dialog,'Style','text','String','_t','Position',[dborder 4*dborder+2*cheight 20 cheight]);
+            tool.LowerThresholdSlider = uicontrol('Parent',tool.Dialog,'Style','slider','Min',0,'Max',1,'Value',tool.LowerThreshold,'Position',[dborder+20 4*dborder+2*cheight cwidth-20 cheight],'Tag','lts');
             addlistener(tool.LowerThresholdSlider,'Value','PostSet',@tool.continuousSliderManage);
             
             % upper threshold slider
-            uicontrol('Parent',tool.Dialog,'Style','text','String','^t','Position',[dborder dborder 20 cheight]);
-            tool.UpperThresholdSlider = uicontrol('Parent',tool.Dialog,'Style','slider','Min',0,'Max',1,'Value',tool.UpperThreshold,'Position',[dborder+20 dborder cwidth-20 cheight],'Tag','uts');
+            uicontrol('Parent',tool.Dialog,'Style','text','String','^t','Position',[dborder 3*dborder+cheight 20 cheight]);
+            tool.UpperThresholdSlider = uicontrol('Parent',tool.Dialog,'Style','slider','Min',0,'Max',1,'Value',tool.UpperThreshold,'Position',[dborder+20 3*dborder+cheight cwidth-20 cheight],'Tag','uts');
             addlistener(tool.UpperThresholdSlider,'Value','PostSet',@tool.continuousSliderManage);
 %             uiwait(tool.Dialog)
 
+            % done button
+            uicontrol('Parent',tool.Dialog,'Style','pushbutton','String','Done','Position',[dborder dborder cwidth cheight],'Callback',@tool.buttonDonePushed);
             tool.MouseIsDown = false;
         end
         
@@ -251,7 +253,7 @@ classdef sphereAnnotationTool < handle
                 
                 disp('added sphere')
                 disp(tool.Spheres)
-            elseif strcmp(src.String,'remove')
+            elseif strcmp(src.String,'rem')
                 validSpheres = tool.Spheres(tool.Spheres(:,2) == tool.ClassIndex,:);
                 if ~isempty(validSpheres)
                     cx = tool.Center(1); cy = tool.Center(2); cz = tool.PlaneIndex;
@@ -362,6 +364,10 @@ classdef sphereAnnotationTool < handle
         function closeTool(tool,~,~)
             delete(tool.Figure)
             delete(tool.Dialog);
+        end
+        
+        function buttonDonePushed(tool,~,~)
+            tool.closeTool();
         end
     end
 end

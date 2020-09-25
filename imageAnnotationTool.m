@@ -63,7 +63,7 @@ classdef imageAnnotationTool < handle
             cheight = 20;
             
             tool.Dialog = dialog('WindowStyle', 'normal',...
-                                'Name', 'ImageAnnotationBot',...
+                                'Name', 'ImageAnnotationTool',...
                                 'CloseRequestFcn', @tool.closeDialog,...
                                 'Position',[100 100 dwidth 11*dborder+11*cheight]);
             labels = cell(1,nLabels);
@@ -109,7 +109,7 @@ classdef imageAnnotationTool < handle
             uiwait(tool.Dialog)
         end
         
-        function changeThreshold(tool,src,callbackdata)
+        function changeThreshold(tool,src,~)
             value = str2double(src.String);
             if strcmp(src.Tag,'ltb')
                 tool.LowerThreshold = value;
@@ -126,7 +126,7 @@ classdef imageAnnotationTool < handle
             tool.ImageHandle.CData = I;
         end
         
-        function changeSliderRange(tool,src,callbackdata)
+        function changeSliderRange(tool,src,~)
             value = str2double(src.String);
             if strcmp(src.Tag,'sliderMin')
                 tool.Slider.Min = value;
@@ -141,15 +141,15 @@ classdef imageAnnotationTool < handle
             end
         end
         
-        function radioDraw(tool,src,callbackdata)
+        function radioDraw(tool,src,~)
             tool.RadioErase.Value = 1-src.Value;
         end
         
-        function radioErase(tool,src,callbackdata)
+        function radioErase(tool,src,~)
             tool.RadioDraw.Value = 1-src.Value;
         end
         
-        function continuousSliderManage(tool,src,callbackdata)
+        function continuousSliderManage(tool,~,callbackdata)
             tag = callbackdata.AffectedObject.Tag;
             if strcmp(tag,'pss')
                 tool.PenSize = round(callbackdata.AffectedObject.Value);
@@ -186,22 +186,22 @@ classdef imageAnnotationTool < handle
             end
         end
         
-        function sliderManage(tool,src,callbackdata)
+        function sliderManage(tool,src,~)
             tool.PenSize = round(src.Value);
             set(tool.TransparencyHandle, 'AlphaData', 0.5*tool.LabelMasks(:,:,tool.LabelIndex));
         end
  
-        function popupManage(tool,src,callbackdata)
+        function popupManage(tool,src,~)
             tool.LabelIndex = src.Value;
             set(tool.TransparencyHandle, 'AlphaData', 0.5*tool.LabelMasks(:,:,tool.LabelIndex));
         end
         
-        function closeDialog(tool,src,callbackdata)
+        function closeDialog(tool,~,~)
             delete(tool.Dialog);
             delete(tool.Figure);
         end
         
-        function buttonDonePushed(tool,src,callbackdata)
+        function buttonDonePushed(tool,~,~)
             NoOverlap = sum(tool.LabelMasks,3) <= 1;
 %             for i = 1:tool.NLabels
 %                 imwrite(tool.LabelMasks(:,:,i).*NoOverlap,[tool.FolderPath sprintf('/%s_Class%d.png',tool.ImageName,i)]);
@@ -212,12 +212,12 @@ classdef imageAnnotationTool < handle
             delete(tool.Figure);
         end
         
-        function closeFigure(tool,src,callbackdata)
+        function closeFigure(tool,~,~)
             delete(tool.Figure);
             delete(tool.Dialog);
         end
         
-        function mouseMove(tool,src,callbackdata)
+        function mouseMove(tool,~,~)
             p = tool.Axis.CurrentPoint;
             col = round(p(1,1));
             row = round(p(1,2));
@@ -237,11 +237,11 @@ classdef imageAnnotationTool < handle
             end
         end
         
-        function mouseDown(tool,src,callbackdata)
+        function mouseDown(tool,~,~)
             tool.MouseIsDown = true;
         end
         
-        function mouseUp(tool,src,callbackdata)
+        function mouseUp(tool,~,~)
             tool.MouseIsDown = false;
         end
     end
