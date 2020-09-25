@@ -21,7 +21,7 @@ load('data.mat');
 V = data{1}; AccM = data{2}; W = data{3}; clear('data')
 disp('done loading')
 
-%% 2. annotate single sequence of contours (then go to step 3)
+%% 2. annotate single sequence of contours, one per plane (then go to step 3)
 
 T = volumeAnnotationTool(W,1);
 
@@ -59,7 +59,7 @@ W(AccM) = 0.75*W(AccM);
 stackViewTool(W);
 
 %% 4. save final annotations
-% make sure the output file name is related to -- but not the same as -- the input file name
+% saving annotations as a tif stack
 
 antPath = 'ant.tif';
 
